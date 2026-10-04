@@ -1,0 +1,33 @@
+# Maven build output
+backend/target/
+
+# IDE / editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS-specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+*.env.local
+
+# Node (if any tooling is added)
+node_modules/
+
+# Test artifacts already committed to CI
+backend/target/surefire-reports/

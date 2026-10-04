@@ -1,0 +1,65 @@
+name: Java CI — Distributed Order System
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    name: Build and Test (JDK 21)
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up JDK 21
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # Step 3: Cache Maven dependencies (speeds up CI significantly)
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('backend/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # Step 4: Run unit tests
+      # NOTE: Tests do NOT require Kafka to be running.
+      # All tests are pure unit tests (validation, serialization, processing).
+      - name: Run unit tests
+        working-directory: backend
+        run: mvn test --batch-mode --no-transfer-progress
+
+      # Step 5: Package the project (only if tests pass)
+      - name: Package application
+        working-directory: backend
+        run: mvn package -DskipTests --batch-mode --no-transfer-progress
+
+      # Step 6: Upload test reports as artifact for review
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-reports
+          path: backend/target/surefire-reports/
+          retention-days: 7
+
+      # Step 7: Upload built JARs
+      - name: Upload JAR artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: application-jars
+          path: |
+            backend/target/order-producer.jar
+            backend/target/order-consumer.jar
+          retention-days: 7
